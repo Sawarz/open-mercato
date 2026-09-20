@@ -5,6 +5,8 @@ const DEFAULT_MAX_OCR_PAGES = 50
 const DEFAULT_OCR_PAGE_TIMEOUT_MS = 60_000
 const DEFAULT_OCR_MAX_OUTPUT_TOKENS = 4_096
 const DEFAULT_OCR_MAX_CONCURRENCY = 2
+/** Default max queued-but-not-yet-running OCR jobs. Beyond this, new uploads skip OCR. */
+const DEFAULT_OCR_MAX_WAIT_QUEUE = 50
 
 function parsePositiveInt(raw: string | undefined, fallback: number): number {
   if (raw === undefined || raw.trim() === '') return fallback
@@ -13,24 +15,34 @@ function parsePositiveInt(raw: string | undefined, fallback: number): number {
   return Math.floor(parsed)
 }
 
-/** Cap PDF pages processed for OCR / text extraction (env: OM_OCR_MAX_PAGES). */
+/** Cap PDF pages processed for OCR / text extraction (env: OM_ATTACHMENT_OCR_MAX_PAGES). */
 export function resolveMaxOcrPages(): number {
-  return parsePositiveInt(process.env.OM_OCR_MAX_PAGES, DEFAULT_MAX_OCR_PAGES)
+  return parsePositiveInt(process.env.OM_ATTACHMENT_OCR_MAX_PAGES, DEFAULT_MAX_OCR_PAGES)
 }
 
-/** Per-page LLM OCR call timeout in ms (env: OM_OCR_PAGE_TIMEOUT_MS). */
+/** Per-page LLM OCR call timeout in ms (env: OM_ATTACHMENT_OCR_PAGE_TIMEOUT_MS). */
 export function resolveOcrPageTimeoutMs(): number {
-  return parsePositiveInt(process.env.OM_OCR_PAGE_TIMEOUT_MS, DEFAULT_OCR_PAGE_TIMEOUT_MS)
+  return parsePositiveInt(process.env.OM_ATTACHMENT_OCR_PAGE_TIMEOUT_MS, DEFAULT_OCR_PAGE_TIMEOUT_MS)
 }
 
-/** Max output tokens for a single OCR generateText call (env: OM_OCR_MAX_OUTPUT_TOKENS). */
+/** Max output tokens for a single OCR generateText call (env: OM_ATTACHMENT_OCR_MAX_OUTPUT_TOKENS). */
 export function resolveOcrMaxOutputTokens(): number {
-  return parsePositiveInt(process.env.OM_OCR_MAX_OUTPUT_TOKENS, DEFAULT_OCR_MAX_OUTPUT_TOKENS)
+  return parsePositiveInt(process.env.OM_ATTACHMENT_OCR_MAX_OUTPUT_TOKENS, DEFAULT_OCR_MAX_OUTPUT_TOKENS)
 }
 
-/** Max concurrent in-process OCR jobs (env: OM_OCR_MAX_CONCURRENCY). */
+/** Max concurrent in-process OCR jobs (env: OM_ATTACHMENT_OCR_MAX_CONCURRENCY). */
 export function resolveOcrMaxConcurrency(): number {
-  return parsePositiveInt(process.env.OM_OCR_MAX_CONCURRENCY, DEFAULT_OCR_MAX_CONCURRENCY)
+  return parsePositiveInt(process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY, DEFAULT_OCR_MAX_CONCURRENCY)
+}
+
+/**
+ * Max jobs that may wait in the in-process queue (env: OM_ATTACHMENT_OCR_MAX_WAIT_QUEUE).
+ * When the queue is full, new OCR requests are silently dropped (attachment is stored without
+ * OCR content) so a burst cannot park unbounded closures — each holding a forked EM — in memory.
+ * Note: this counter is process-local. The effective cluster cap is max_concurrency × replica_count.
+ */
+export function resolveOcrMaxWaitQueue(): number {
+  return parsePositiveInt(process.env.OM_ATTACHMENT_OCR_MAX_WAIT_QUEUE, DEFAULT_OCR_MAX_WAIT_QUEUE)
 }
 
 /** How many PDF pages to iterate given document length and the configured cap. */
@@ -49,5 +61,18 @@ export function resolveAttachmentsUploadRateLimitConfig(): RateLimitConfig {
     points: 30,
     duration: 60,
     keyPrefix: 'attachments_upload',
+  })
+}
+
+/**
+ * Per-customer-account upload throttle for the portal POST /api/warranty_claims/portal/attachments.
+ * Lower-trust surface — customer portal accounts rather than staff users.
+ * Env: RATE_LIMIT_ATTACHMENTS_PORTAL_UPLOAD_{POINTS,DURATION,BLOCK_DURATION}.
+ */
+export function resolvePortalAttachmentUploadRateLimitConfig(): RateLimitConfig {
+  return readEndpointRateLimitConfig('ATTACHMENTS_PORTAL_UPLOAD', {
+    points: 10,
+    duration: 60,
+    keyPrefix: 'attachments_portal_upload',
   })
 }

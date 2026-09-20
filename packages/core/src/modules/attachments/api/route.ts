@@ -285,22 +285,25 @@ export async function POST(req: Request) {
   const tenantId = auth.tenantId
 
   const container = await createRequestContainer()
+  // Fail-open: uploads continue when Redis is down. This is intentional — a transient
+  // store outage should not block legitimate uploads. Log so operators can detect it.
+  let rateLimiterService: RateLimiterService | null = null
   try {
-    const rateLimiterService = container.resolve('rateLimiterService') as RateLimiterService | null
-    if (rateLimiterService) {
-      const principal = typeof auth.sub === 'string' && auth.sub.length > 0
-        ? auth.sub
-        : (typeof auth.userId === 'string' && auth.userId.length > 0 ? auth.userId : 'anonymous')
-      const rateLimitResponse = await checkRateLimit(
-        rateLimiterService,
-        resolveAttachmentsUploadRateLimitConfig(),
-        `${tenantId}:${principal}`,
-        t(RATE_LIMIT_ERROR_KEY, RATE_LIMIT_ERROR_FALLBACK),
-      )
-      if (rateLimitResponse) return rateLimitResponse
-    }
+    rateLimiterService = container.resolve('rateLimiterService') as RateLimiterService
   } catch {
-    // rateLimiterService may be absent in minimal containers; fail open on resolve miss.
+    logger.warn('rateLimiterService not registered — upload rate limit not enforced')
+  }
+  if (rateLimiterService) {
+    // auth.sub is a required string (handler 401s above on missing auth); the fallback
+    // is unreachable but kept for type safety.
+    const principal = auth.sub ?? auth.userId ?? 'unknown'
+    const rateLimitResponse = await checkRateLimit(
+      rateLimiterService,
+      resolveAttachmentsUploadRateLimitConfig(),
+      `${tenantId}:${principal}`,
+      t(RATE_LIMIT_ERROR_KEY, RATE_LIMIT_ERROR_FALLBACK),
+    )
+    if (rateLimitResponse) return rateLimitResponse
   }
 
   const contentType = req.headers.get('content-type') || ''

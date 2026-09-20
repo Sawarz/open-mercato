@@ -119,6 +119,15 @@ The reset-confirm and reset-validate endpoints use IP-only limiting because no e
 
 On successful login, the compound counter is automatically reset so legitimate users aren't penalized for prior typos. The IP-only counter is not reset.
 
+**Upload endpoints** have handler-level rate limiting keyed on `tenantId:userId` (staff) or `tenantId:sub` (customer portal):
+
+| Endpoint | Key | Points | Window |
+|----------|-----|--------|--------|
+| `POST /api/attachments` | `tenantId:userId` | 30 | 60s |
+| `POST /api/warranty_claims/portal/attachments` | `tenantId:sub` | 10 | 60s |
+
+Both endpoints fail-open: if the rate-limiter service is unavailable the upload proceeds and a `warn` log is emitted.
+
 All limits can be overridden via environment variables (see [Configuration](#configuration)).
 
 ## 429 Response Format
@@ -206,6 +215,17 @@ When using `redis` strategy, the service reads `REDIS_URL` (already used by cach
 | `RATE_LIMIT_RESET_CONFIRM_DURATION` | `300` | Window in seconds |
 | `RATE_LIMIT_RESET_VALIDATE_POINTS` | `10` | Max reset-token checks per IP per window |
 | `RATE_LIMIT_RESET_VALIDATE_DURATION` | `300` | Window in seconds |
+
+**Upload endpoints:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `RATE_LIMIT_ATTACHMENTS_UPLOAD_POINTS` | `30` | Max staff attachment uploads per user per window |
+| `RATE_LIMIT_ATTACHMENTS_UPLOAD_DURATION` | `60` | Window in seconds |
+| `RATE_LIMIT_ATTACHMENTS_UPLOAD_BLOCK_DURATION` | — | Optional block duration after exceeding limit |
+| `RATE_LIMIT_ATTACHMENTS_PORTAL_UPLOAD_POINTS` | `10` | Max portal attachment uploads per customer per window |
+| `RATE_LIMIT_ATTACHMENTS_PORTAL_UPLOAD_DURATION` | `60` | Window in seconds |
+| `RATE_LIMIT_ATTACHMENTS_PORTAL_UPLOAD_BLOCK_DURATION` | — | Optional block duration after exceeding limit |
 
 **Future:**
 

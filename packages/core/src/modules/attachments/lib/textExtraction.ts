@@ -1,7 +1,10 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { createRequire } from 'module'
+import { createLogger } from '@open-mercato/shared/lib/logger'
 import { resolveMaxOcrPages, resolvePdfPageIterationLimit } from './ocrLimits'
+
+const logger = createLogger('attachments').child({ component: 'text-extraction' })
 
 // NOTE: child_process is intentionally NOT imported here.
 // This module MUST NOT shell out to any external binary for content extraction.
@@ -69,7 +72,16 @@ async function extractPdfText(filePath: string): Promise<string | null> {
     })
     const pdfDocument = await loadingTask.promise
     const textParts: string[] = []
-    const pageLimit = resolvePdfPageIterationLimit(pdfDocument.numPages, resolveMaxOcrPages())
+    const maxPages = resolveMaxOcrPages()
+    const pageLimit = resolvePdfPageIterationLimit(pdfDocument.numPages, maxPages)
+
+    if (pdfDocument.numPages > pageLimit) {
+      logger.warn('PDF truncated for text extraction', {
+        filePath,
+        totalPages: pdfDocument.numPages,
+        extractedPages: pageLimit,
+      })
+    }
     try {
       for (let pageNumber = 1; pageNumber <= pageLimit; pageNumber += 1) {
         const page = await pdfDocument.getPage(pageNumber)

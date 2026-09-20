@@ -3,7 +3,7 @@ import { Attachment, AttachmentPartition } from '../data/entities'
 import { OcrService } from './ocrService'
 import type { StorageDriver } from './drivers/types'
 import { createLogger } from '@open-mercato/shared/lib/logger'
-import { resolveOcrMaxConcurrency } from './ocrLimits'
+import { resolveOcrMaxConcurrency, resolveOcrMaxWaitQueue } from './ocrLimits'
 
 const logger = createLogger('attachments').child({ component: 'ocr' })
 
@@ -32,7 +32,10 @@ export function getOcrConcurrencyStateForTests(): { active: number; waiting: num
 
 export async function withOcrConcurrencySlot<T>(run: () => Promise<T>): Promise<T> {
   const maxConcurrency = resolveOcrMaxConcurrency()
-  if (activeOcrJobs >= maxConcurrency) {
+  // `while` (not `if`) re-checks after waking: a barger that arrives between the
+  // release decrement and the waiter's resumption would otherwise both increment,
+  // exceeding the cap.
+  while (activeOcrJobs >= maxConcurrency) {
     await new Promise<void>((resolve) => {
       ocrWaitQueue.push(resolve)
     })
@@ -128,6 +131,16 @@ export async function requestOcrProcessing(
   }
 
   const workerEm = em.fork()
+
+  // Cap the wait queue to bound memory: each waiting slot holds a forked EM closure.
+  // Note: activeOcrJobs is in-process only; the cluster cap is max_concurrency × replica_count.
+  if (ocrWaitQueue.length >= resolveOcrMaxWaitQueue()) {
+    logger.warn('OCR wait queue full — skipping OCR for attachment', {
+      attachmentId: payload.attachmentId,
+      waiting: ocrWaitQueue.length,
+    })
+    return
+  }
 
   setImmediate(() => {
     withOcrConcurrencySlot(() => processAttachmentOcr(workerEm, payload, driver)).catch((error) => {

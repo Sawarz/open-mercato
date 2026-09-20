@@ -18,10 +18,13 @@ import { attachmentCrudEvents, attachmentCrudIndexer } from '@open-mercato/core/
 import { readAttachmentMetadata } from '@open-mercato/core/modules/attachments/lib/metadata'
 import { clearAttachmentThumbnailCache } from '@open-mercato/core/modules/attachments/lib/thumbnailCache'
 import { isMultipartRequestWithinUploadLimit } from '@open-mercato/core/modules/attachments/lib/upload-limits'
+import { resolvePortalAttachmentUploadRateLimitConfig } from '@open-mercato/core/modules/attachments/lib/ocrLimits'
 import {
   isScopedAttachmentUploadError,
   type ScopedAttachmentUploadErrorCode,
 } from '@open-mercato/core/modules/attachments/lib/scoped-upload-service'
+import type { RateLimiterService } from '@open-mercato/shared/lib/ratelimit/service'
+import { checkRateLimit, RATE_LIMIT_ERROR_FALLBACK, RATE_LIMIT_ERROR_KEY } from '@open-mercato/shared/lib/ratelimit/helpers'
 import type { OpenApiRouteDoc } from '@open-mercato/shared/lib/openapi'
 import { WarrantyClaim } from '../../../data/entities'
 import { WARRANTY_CLAIM_RESOURCE_KIND } from '../../../commands/shared'
@@ -350,6 +353,25 @@ async function handleUpload(req: Request, replacement: boolean): Promise<Respons
   if (!contentType.toLowerCase().includes('multipart/form-data')) {
     return NextResponse.json({ ok: false, error: translate('warranty_claims.errors.invalidInput', 'Invalid input') }, { status: 400 })
   }
+
+  // Fail-open: uploads continue when Redis is down (transient outage should not block customers).
+  let rateLimiterService: RateLimiterService | null = null
+  try {
+    rateLimiterService = context.container.resolve('rateLimiterService') as RateLimiterService
+  } catch {
+    logger.warn('rateLimiterService not registered — portal upload rate limit not enforced')
+  }
+  if (rateLimiterService) {
+    const principal = context.auth.sub ?? 'unknown'
+    const rateLimitResponse = await checkRateLimit(
+      rateLimiterService,
+      resolvePortalAttachmentUploadRateLimitConfig(),
+      `${context.tenantId}:${principal}`,
+      t(RATE_LIMIT_ERROR_KEY, RATE_LIMIT_ERROR_FALLBACK),
+    )
+    if (rateLimitResponse) return rateLimitResponse
+  }
+
   if (!isMultipartRequestWithinUploadLimit(req.headers.get('content-length'))) {
     return NextResponse.json({
       ok: false,

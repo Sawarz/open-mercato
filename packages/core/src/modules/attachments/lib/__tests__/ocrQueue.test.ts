@@ -55,16 +55,16 @@ describe('requestOcrProcessing EntityManager isolation', () => {
 })
 
 describe('withOcrConcurrencySlot', () => {
-  const previousConcurrency = process.env.OM_OCR_MAX_CONCURRENCY
+  const previousConcurrency = process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY
 
   beforeEach(() => {
     resetOcrConcurrencyStateForTests()
-    process.env.OM_OCR_MAX_CONCURRENCY = '1'
+    process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY = '1'
   })
 
   afterEach(() => {
-    if (previousConcurrency === undefined) delete process.env.OM_OCR_MAX_CONCURRENCY
-    else process.env.OM_OCR_MAX_CONCURRENCY = previousConcurrency
+    if (previousConcurrency === undefined) delete process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY
+    else process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY = previousConcurrency
     resetOcrConcurrencyStateForTests()
   })
 
@@ -97,6 +97,35 @@ describe('withOcrConcurrencySlot', () => {
     await expect(first).resolves.toBe('first')
     await expect(second).resolves.toBe('second')
     expect(secondStarted).toBe(true)
+    expect(getOcrConcurrencyStateForTests()).toEqual({ active: 0, waiting: 0 })
+  })
+
+  it('never exceeds the concurrency cap with 3 simultaneous jobs (cap=1)', async () => {
+    const maxObservedActive: number[] = []
+    let releaseA!: () => void
+    let releaseB!: () => void
+    let releaseC!: () => void
+    const gateA = new Promise<void>((r) => { releaseA = r })
+    const gateB = new Promise<void>((r) => { releaseB = r })
+    const gateC = new Promise<void>((r) => { releaseC = r })
+
+    const track = () => maxObservedActive.push(getOcrConcurrencyStateForTests().active)
+
+    const jobA = withOcrConcurrencySlot(async () => { track(); await gateA; return 'a' })
+    const jobB = withOcrConcurrencySlot(async () => { track(); await gateB; return 'b' })
+    const jobC = withOcrConcurrencySlot(async () => { track(); await gateC; return 'c' })
+
+    // Drain microtask queue so all three have attempted entry.
+    for (let i = 0; i < 5; i++) await Promise.resolve()
+
+    releaseA()
+    await jobA
+    releaseB()
+    await jobB
+    releaseC()
+    await jobC
+
+    expect(maxObservedActive.every((n) => n <= 1)).toBe(true)
     expect(getOcrConcurrencyStateForTests()).toEqual({ active: 0, waiting: 0 })
   })
 })

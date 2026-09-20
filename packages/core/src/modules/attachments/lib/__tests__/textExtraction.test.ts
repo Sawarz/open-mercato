@@ -62,6 +62,7 @@ describe('extractAttachmentContent', () => {
   afterEach(() => {
     getMammothMock().extractRawText.mockReset()
     getPdfMock().getDocument.mockReset()
+    delete process.env.OM_ATTACHMENT_OCR_MAX_PAGES
   })
 
   it('returns null for image MIME types without any extraction', async () => {
@@ -199,8 +200,8 @@ describe('extractAttachmentContent', () => {
     expect(getMammothMock().extractRawText).not.toHaveBeenCalled()
   })
 
-  it('caps PDF page iteration at OM_OCR_MAX_PAGES', async () => {
-    process.env.OM_OCR_MAX_PAGES = '2'
+  it('caps PDF page iteration at OM_ATTACHMENT_OCR_MAX_PAGES', async () => {
+    process.env.OM_ATTACHMENT_OCR_MAX_PAGES = '2'
     const mockPage = {
       getTextContent: jest.fn().mockResolvedValue({ items: [{ str: 'page' }] }),
       cleanup: jest.fn(),
@@ -217,7 +218,6 @@ describe('extractAttachmentContent', () => {
     expect(getPage).toHaveBeenCalledTimes(2)
     expect(getPage).toHaveBeenCalledWith(1)
     expect(getPage).toHaveBeenCalledWith(2)
-    delete process.env.OM_OCR_MAX_PAGES
   })
 
   it('returns null when PDF pdfjs extraction fails — does not propagate', async () => {

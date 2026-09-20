@@ -104,7 +104,7 @@ export class OcrService {
       const result = await generateText({
         model: client(model),
         abortSignal: AbortSignal.timeout(resolveOcrPageTimeoutMs()),
-        maxRetries: 0,
+        maxRetries: 1,
         maxOutputTokens: resolveOcrMaxOutputTokens(),
         messages: [
           {
