@@ -23,7 +23,8 @@ export type OcrProcessingDispatch = 'queued' | 'inline_fallback'
 let activeOcrJobs = 0
 const ocrWaitQueue: Array<() => void> = []
 // Jobs scheduled with setImmediate that have not yet entered a slot or the wait queue.
-// Counted toward the wait-queue cap so a burst in one event-loop turn cannot pass the check together.
+// Only those beyond the free concurrency slots count toward the wait-queue cap, so a burst in one
+// event-loop turn cannot pass the check together while jobs that take a free slot never use a wait place.
 let pendingOcrJobs = 0
 
 /** Test-only: reset in-process OCR concurrency bookkeeping. */
@@ -39,20 +40,21 @@ export function getOcrConcurrencyStateForTests(): { active: number; waiting: num
 }
 
 export async function withOcrConcurrencySlot<T>(run: () => Promise<T>): Promise<T> {
-  const maxConcurrency = resolveOcrMaxConcurrency()
-  // Re-check after wake: multiple waiters can resume when one slot frees (barging).
-  while (activeOcrJobs >= maxConcurrency) {
+  if (activeOcrJobs >= resolveOcrMaxConcurrency()) {
     await new Promise<void>((resolve) => {
       ocrWaitQueue.push(resolve)
     })
+  } else {
+    activeOcrJobs += 1
   }
-  activeOcrJobs += 1
   try {
     return await run()
   } finally {
-    activeOcrJobs -= 1
+    // The slot passes straight to the next waiter, which never increments: releasing it first
+    // would let a request arriving before the waiter resumes count it as free.
     const next = ocrWaitQueue.shift()
     if (next) next()
+    else activeOcrJobs -= 1
   }
 }
 
@@ -176,11 +178,17 @@ export async function requestOcrProcessing(
   const workerEm = em.fork()
 
   const maxWaitQueue = resolveOcrMaxWaitQueue()
-  if (ocrWaitQueue.length + pendingOcrJobs >= maxWaitQueue) {
+  const freeSlots = Math.max(0, resolveOcrMaxConcurrency() - activeOcrJobs)
+  const projectedWaiting = ocrWaitQueue.length + Math.max(0, pendingOcrJobs - freeSlots)
+  const wouldWait = pendingOcrJobs >= freeSlots
+  if (wouldWait && projectedWaiting >= maxWaitQueue) {
     logger.warn('OCR wait queue full; falling back to inline text extraction', {
       attachmentId: attachment.id,
+      active: activeOcrJobs,
       waiting: ocrWaitQueue.length,
       pending: pendingOcrJobs,
+      freeSlots,
+      projectedWaiting,
       maxWaitQueue,
     })
     await persistInlineTextExtractionFallback(workerEm, payload, driver)
