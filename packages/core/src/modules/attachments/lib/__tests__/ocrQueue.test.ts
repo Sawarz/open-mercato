@@ -247,4 +247,110 @@ describe('requestOcrProcessing wait queue cap', () => {
     expect(setImmediateSpy).toHaveBeenCalledTimes(2)
     releaseFirst()
   })
+
+  it('does not charge jobs that take a free slot against the wait queue in a same-turn burst', async () => {
+    process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY = '2'
+    process.env.OM_ATTACHMENT_OCR_MAX_WAIT_QUEUE = '2'
+
+    const forkedEm = {
+      findOne: jest.fn(async () => ({ id: 'a', content: null })),
+      persist: jest.fn(() => forkedEm),
+      flush: jest.fn(async () => undefined),
+    }
+    const requestEm = { fork: jest.fn(() => forkedEm) } as unknown as EntityManager
+    const driver = {
+      toLocalPath: jest.fn(async () => ({ filePath: '/tmp/x.pdf', cleanup: jest.fn(async () => undefined) })),
+    } as unknown as StorageDriver
+
+    const outcomes = await Promise.all(
+      [1, 2, 3, 4, 5].map(() => requestOcrProcessing(requestEm, makeAttachment(), driver, 'docs/x.pdf')),
+    )
+
+    expect(outcomes).toEqual(['queued', 'queued', 'queued', 'queued', 'inline_fallback'])
+    expect(setImmediateSpy).toHaveBeenCalledTimes(4)
+  })
+  it('admits a same-turn burst into the expected end state once the scheduled jobs run', async () => {
+    process.env.OM_ATTACHMENT_OCR_MAX_CONCURRENCY = '2'
+    process.env.OM_ATTACHMENT_OCR_MAX_WAIT_QUEUE = '2'
+    const previousKey = process.env.OPENAI_API_KEY
+    delete process.env.OPENAI_API_KEY
+
+    const scheduled: Array<() => void> = []
+    setImmediateSpy.mockImplementation(((callback: () => void) => {
+      scheduled.push(callback)
+      return undefined
+    }) as never)
+
+    let releaseGate!: () => void
+    const gate = new Promise<void>((resolve) => {
+      releaseGate = resolve
+    })
+    const gatedDriver = {
+      toLocalPath: jest.fn(async () => {
+        await gate
+        return { filePath: '/tmp/x.pdf', cleanup: jest.fn(async () => undefined) }
+      }),
+    } as unknown as StorageDriver
+    const forkedEm = { findOne: jest.fn(async () => null) }
+    const requestEm = { fork: jest.fn(() => forkedEm) } as unknown as EntityManager
+
+    try {
+      const outcomes = await Promise.all(
+        [1, 2, 3].map(() => requestOcrProcessing(requestEm, makeAttachment(), gatedDriver, 'docs/x.pdf')),
+      )
+      expect(outcomes).toEqual(['queued', 'queued', 'queued'])
+      expect(scheduled).toHaveLength(3)
+
+      scheduled.forEach((callback) => callback())
+      expect(getOcrConcurrencyStateForTests()).toEqual({ active: 2, waiting: 1 })
+    } finally {
+      releaseGate()
+      for (let tick = 0; tick < 50; tick += 1) await Promise.resolve()
+      if (previousKey === undefined) delete process.env.OPENAI_API_KEY
+      else process.env.OPENAI_API_KEY = previousKey
+    }
+    expect(getOcrConcurrencyStateForTests()).toEqual({ active: 0, waiting: 0 })
+  })
+
+  it('refuses a request that arrives while a freed slot is already promised to a woken waiter', async () => {
+    let releaseFirst!: () => void
+    const firstGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve
+    })
+    let releaseSecond!: () => void
+    const secondGate = new Promise<void>((resolve) => {
+      releaseSecond = resolve
+    })
+    const first = withOcrConcurrencySlot(async () => {
+      await firstGate
+    })
+    await Promise.resolve()
+    const second = withOcrConcurrencySlot(async () => {
+      await secondGate
+    })
+    await Promise.resolve()
+    expect(getOcrConcurrencyStateForTests()).toEqual({ active: 1, waiting: 1 })
+
+    const forkedEm = {
+      findOne: jest.fn(async () => ({ id: 'a', content: null })),
+      persist: jest.fn(() => forkedEm),
+      flush: jest.fn(async () => undefined),
+    }
+    const requestEm = { fork: jest.fn(() => forkedEm) } as unknown as EntityManager
+    const overflowDriver = {
+      toLocalPath: jest.fn(async () => ({ filePath: '/tmp/x.pdf', cleanup: jest.fn(async () => undefined) })),
+    } as unknown as StorageDriver
+
+    releaseFirst()
+    while (getOcrConcurrencyStateForTests().waiting > 0) await Promise.resolve()
+
+    const outcomes = await Promise.all(
+      [1, 2].map(() => requestOcrProcessing(requestEm, makeAttachment(), overflowDriver, 'docs/x.pdf')),
+    )
+    expect(outcomes).toEqual(['queued', 'inline_fallback'])
+
+    releaseSecond()
+    await first
+    await second
+  })
 })
