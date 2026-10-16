@@ -81,6 +81,7 @@ jest.mock('next/link', () => ({
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), refresh: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 describe('SalesDocumentsTable sticky number column (issue #3039)', () => {

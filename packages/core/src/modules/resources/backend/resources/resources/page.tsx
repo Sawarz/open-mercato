@@ -23,6 +23,7 @@ import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/u
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useConfirmDialog } from '@open-mercato/ui/backend/confirm-dialog'
 import { Pencil } from 'lucide-react'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const PAGE_SIZE = 20
 const RESOURCE_LIST_MUTATION_CONTEXT_ID = 'resources.resources.list'
@@ -83,7 +84,7 @@ export default function ResourcesResourcesPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [isLoading, setIsLoading] = React.useState(true)
   const [resourceTypes, setResourceTypes] = React.useState<Map<string, ResourceTypeRow>>(new Map())

@@ -35,6 +35,7 @@ jest.mock('@open-mercato/ui/backend/confirm-dialog', () => ({
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 function okResult<T>(result: T): ApiResult<T> {

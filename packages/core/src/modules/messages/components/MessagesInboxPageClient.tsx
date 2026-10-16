@@ -29,6 +29,7 @@ import {
   type SenderOption,
 } from './inboxFilters'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('messages').child({ component: 'MessagesInboxPageClient' })
 
@@ -98,7 +99,7 @@ export function MessagesInboxPageClient() {
 
   const [folder, setFolder] = React.useState<MessageFolder>('inbox')
   const [folderMenuOpen, setFolderMenuOpen] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [page, setPage] = React.useState(1)
   const pageSize = 20

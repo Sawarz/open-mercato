@@ -27,6 +27,7 @@ import { resolveCountryName } from '@open-mercato/shared/lib/location/countries'
 import { hasFeature } from '@open-mercato/shared/security/features'
 import type { EudrCommodity, EudrSubmissionStatus } from '../../../data/validators'
 import { commodityOptions, statusBadgeVariant, submissionStatusOptions, type CompanySnapshot } from '../../../components/formConfig'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type EvidenceSubmissionRow = {
   id: string
@@ -94,7 +95,7 @@ export default function EudrEvidenceSubmissionsPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [filters, setFilters] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)

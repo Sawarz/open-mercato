@@ -18,6 +18,7 @@ import { useGuardedMutation } from '@open-mercato/ui/backend/injection/useGuarde
 import { ErrorMessage } from '@open-mercato/ui/backend/detail'
 import { Settings, Inbox, Copy } from 'lucide-react'
 import { CategoryBadge, useCategoryLabels } from '../../components/proposals/CategoryBadge'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type ProposalRow = {
   id: string
@@ -95,7 +96,7 @@ export default function InboxOpsProposalsPage() {
   const [page, setPage] = React.useState(1)
   const [pageSize] = React.useState(25)
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
   const [initialLoadComplete, setInitialLoadComplete] = React.useState(false)

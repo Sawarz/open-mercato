@@ -24,6 +24,7 @@ import { Button } from '@open-mercato/ui/primitives/button'
 import { Badge } from '@open-mercato/ui/primitives/badge'
 import { StatusBadge } from '@open-mercato/ui/primitives/status-badge'
 import { PlotImportDialog } from '../../../components/PlotImportDialog'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type PlotRow = {
   id: string
@@ -104,7 +105,7 @@ export default function EudrPlotsPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [filters, setFilters] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)

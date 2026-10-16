@@ -9,6 +9,7 @@ const mockT = (key: string, fallback?: string) => fallback ?? key
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 jest.mock('@open-mercato/ui/backend/Page', () => ({

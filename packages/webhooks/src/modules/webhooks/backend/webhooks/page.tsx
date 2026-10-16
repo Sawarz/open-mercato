@@ -19,6 +19,7 @@ import type { FilterDef, FilterValues } from '@open-mercato/ui/backend/FilterBar
 import { Alert, AlertDescription, AlertTitle } from '@open-mercato/ui/primitives/alert'
 import { ListEmptyState } from '@open-mercato/ui/backend/filters/ListEmptyState'
 import { useWebhookFeatureAccess } from './useWebhookFeatureAccess'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type Row = {
   id: string
@@ -51,7 +52,7 @@ export default function WebhooksListPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)

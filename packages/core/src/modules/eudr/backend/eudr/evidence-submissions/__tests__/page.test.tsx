@@ -12,6 +12,7 @@ let mockGrantedFeatures: string[] = []
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 jest.mock('next/link', () => ({

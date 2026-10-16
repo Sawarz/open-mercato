@@ -22,6 +22,7 @@ import {
   type CollectionCapabilities,
 } from './documentsListTypes'
 import { readBoolean, readNumber, readRecord } from './documentUi'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 export function useDocumentsList() {
   const t = useT()
@@ -37,7 +38,7 @@ export function useDocumentsList() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [archivedFilter, setArchivedFilter] = React.useState<'exclude' | 'include' | 'only'>('exclude')
   const [favoritesOnly, setFavoritesOnly] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)

@@ -18,6 +18,7 @@ import { useGuardedMutation } from '@open-mercato/ui/backend/injection/useGuarde
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { mapOfferRow, renderOfferPriceSummary, type OfferRow } from './offerTableUtils'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('sales')
 
@@ -56,7 +57,7 @@ export function SalesChannelOffersPanel({ channelId, channelName }: { channelId:
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setLoading] = React.useState(true)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [reloadToken, setReloadToken] = React.useState(0)
@@ -173,7 +174,7 @@ export function SalesChannelOffersPanel({ channelId, channelName }: { channelId:
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   const tableTitle = (
     <div>

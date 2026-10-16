@@ -93,6 +93,7 @@ import {
   clearVersionedPreference,
 } from '@open-mercato/shared/lib/browser/versionedPreference'
 import { runBulkDelete, groupBulkDeleteFailures } from '@open-mercato/ui/backend/utils/bulkDelete'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 import {
   fetchAssignableStaffMembers,
   type AssignableStaffMember,
@@ -432,7 +433,7 @@ export default function DealsKanbanPage(): React.ReactElement {
   const queryClient = useQueryClient()
 
   const [selectedPipelineId, setSelectedPipelineId] = React.useState<string | null>(null)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [sortBy, setSortBy] = React.useState<SortOption>(DEFAULT_SORT)
   const [statusFilters, setStatusFilters] = React.useState<string[]>([])
   const [ownerFilters, setOwnerFilters] = React.useState<string[]>([])
@@ -1718,7 +1719,7 @@ export default function DealsKanbanPage(): React.ReactElement {
     setCurrencyFilter(null)
     setSearch('')
     setSortBy(DEFAULT_SORT)
-  }, [])
+  }, [setSearch])
 
   const activePipelineName = React.useMemo(() => {
     if (!selectedPipelineId) return ''

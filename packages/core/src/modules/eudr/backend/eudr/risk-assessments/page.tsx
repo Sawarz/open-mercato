@@ -21,6 +21,7 @@ import { Button } from '@open-mercato/ui/primitives/button'
 import { StatusBadge } from '@open-mercato/ui/primitives/status-badge'
 import type { SortingState } from '@tanstack/react-table'
 import type { LegacyColumnDef as ColumnDef } from '@tanstack/react-table/legacy'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 import {
   riskConclusionBadgeVariant,
   riskTierBadgeVariant,
@@ -109,7 +110,7 @@ export default function EudrRiskAssessmentsPage() {
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'assessedAt', desc: true }])
   const [filters, setFilters] = React.useState<FilterValues>({})
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [loading, setLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)
   const mutationContextId = 'eudr-risk-assessments-list:delete'

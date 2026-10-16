@@ -35,6 +35,7 @@ import {
 } from './troubleshootingGuideForm'
 import { WarrantyWorkspace } from '../../components/WarrantyWorkspace'
 import { extensionPoints } from '../../../extension-points'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type TroubleshootingGuidesResponse = {
   items?: unknown[]
@@ -73,7 +74,7 @@ export default function WarrantyTroubleshootingGuidesPage() {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [tabCounts, setTabCounts] = React.useState<Partial<Record<GuideSegment, number>>>({})
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)

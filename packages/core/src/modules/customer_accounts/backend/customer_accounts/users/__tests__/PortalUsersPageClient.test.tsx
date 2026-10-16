@@ -13,6 +13,7 @@ jest.mock('@open-mercato/shared/lib/i18n/context', () => ({
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 jest.mock('next/link', () => ({ children, href }: any) => <a href={href}>{children}</a>)

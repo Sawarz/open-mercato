@@ -28,6 +28,7 @@ import {
 import { SALES_DOCUMENT_NUMBER_COLUMN_META } from './salesDocumentsColumns'
 import { useSalesChannelsEnabled } from '../useSalesChannelsEnabled'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('sales')
 
@@ -176,7 +177,7 @@ export function SalesDocumentsTable({ kind }: { kind: SalesDocumentKind }) {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'createdAt', desc: true }])
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [isLoading, setLoading] = React.useState(false)
   const [cacheStatus, setCacheStatus] = React.useState<'hit' | 'miss' | null>(null)
@@ -617,7 +618,7 @@ export function SalesDocumentsTable({ kind }: { kind: SalesDocumentKind }) {
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   const handleRefresh = React.useCallback(() => {
     setReloadToken((token) => token + 1)

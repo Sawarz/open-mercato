@@ -18,6 +18,7 @@ const mockReadApiResultOrThrow = jest.fn()
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 jest.mock('@open-mercato/shared/lib/i18n/context', () => ({

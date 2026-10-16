@@ -33,6 +33,7 @@ import {
 } from './storeAdmin'
 import { buildStoreEditHref } from './storeEditTabs'
 import { useStoreAccess } from './useStoreAccess'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 export const STORE_LIST_PAGE_SIZE = 25
 
@@ -78,7 +79,7 @@ export function StoreListPage() {
   })
   const { canManage } = useStoreAccess()
   const [page, setPage] = React.useState(1)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'name', desc: false }])
   const [createOpen, setCreateOpen] = React.useState(false)
@@ -124,7 +125,7 @@ export function StoreListPage() {
     setFilterValues({})
     setSearch('')
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   const handleArchive = React.useCallback(
     async (row: StoreAdminRecord) => {

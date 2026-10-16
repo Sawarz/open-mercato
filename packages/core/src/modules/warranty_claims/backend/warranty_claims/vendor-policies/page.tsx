@@ -28,6 +28,7 @@ import { fetchClaimReasonOptions } from '../../components/claimReasonOptions'
 import { WarrantyWorkspace } from '../../components/WarrantyWorkspace'
 import { extensionPoints } from '../../../extension-points'
 import { vendorPolicySegmentQuery, type VendorPolicySegment } from '../../../lib/listSegments'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type VendorPoliciesResponse = {
   items?: unknown[]
@@ -81,7 +82,7 @@ export default function WarrantyVendorPoliciesPage() {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [tabCounts, setTabCounts] = React.useState<Partial<Record<VendorPolicySegment, number>>>({})
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)

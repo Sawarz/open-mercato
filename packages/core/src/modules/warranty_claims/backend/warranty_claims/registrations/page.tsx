@@ -26,6 +26,7 @@ import { REGISTRATION_COVERAGE_TYPES, REGISTRATION_SOURCES } from '../../../data
 import { normalizeRegistration, type RegistrationRecord } from './registrationForm'
 import { WarrantyWorkspace } from '../../components/WarrantyWorkspace'
 import { extensionPoints } from '../../../extension-points'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type RegistrationsResponse = {
   items?: unknown[]
@@ -144,7 +145,7 @@ export default function WarrantyClaimRegistrationsPage() {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [tabCounts, setTabCounts] = React.useState<Partial<Record<RegistrationSegment, number>>>({})
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)

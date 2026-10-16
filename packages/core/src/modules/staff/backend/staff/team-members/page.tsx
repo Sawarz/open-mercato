@@ -23,6 +23,7 @@ import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { Pencil, Users } from 'lucide-react'
 import { formatDateTime } from '@open-mercato/shared/lib/time'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('staff')
 
@@ -71,7 +72,7 @@ export default function StaffTeamMembersPage() {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'displayName', desc: false }])
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
@@ -355,7 +356,7 @@ export default function StaffTeamMembersPage() {
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [pathname, router, searchParams])
+  }, [pathname, router, searchParams, setSearch])
 
   const handleFiltersApply = React.useCallback((values: FilterValues) => {
     setFilterValues(values)

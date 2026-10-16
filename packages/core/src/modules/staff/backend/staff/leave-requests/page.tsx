@@ -13,6 +13,7 @@ import { Button } from '@open-mercato/ui/primitives/button'
 import { readApiResultOrThrow } from '@open-mercato/ui/backend/utils/apiCall'
 import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/useOrganizationScope'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const PAGE_SIZE = 50
 
@@ -42,7 +43,7 @@ export default function StaffLeaveRequestsPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'startDate', desc: true }])
 
@@ -142,7 +143,7 @@ export default function StaffLeaveRequestsPage() {
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   return (
     <Page>

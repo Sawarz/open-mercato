@@ -15,6 +15,7 @@ import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/useOrganizationScope'
 import { formatDateTime } from '@open-mercato/shared/lib/time'
 import { ListEmptyState } from '@open-mercato/ui/backend/filters/ListEmptyState'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type ScheduleRow = {
   id: string
@@ -84,7 +85,7 @@ export default function SchedulerPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(false)
   const scopeVersion = useOrganizationScopeVersion()
 

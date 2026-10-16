@@ -23,6 +23,7 @@ import { ListEmptyState } from '@open-mercato/ui/backend/filters/ListEmptyState'
 import type { FilterDef, FilterValues } from '@open-mercato/ui/backend/FilterBar'
 import { buildPortalRootUrl, buildPortalUrlPattern } from '../../../lib/portalUrl'
 import { useDemoPortalAccounts } from '../useDemoPortalAccounts'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type UserRow = {
   id: string
@@ -245,7 +246,7 @@ export function PortalUsersPageClient({ portalOrigin, portalOrgSlug = null }: Po
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)

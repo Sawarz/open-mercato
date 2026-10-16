@@ -23,6 +23,7 @@ import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/u
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { formatDateTime } from '@open-mercato/shared/lib/time'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('resources').child({ component: 'resource-types-page' })
 
@@ -66,7 +67,7 @@ export default function ResourcesResourceTypesPage() {
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [sorting, setSorting] = React.useState<SortingState>([{ id: 'name', desc: false }])
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)
   const { runMutation, retryLastMutation } = useGuardedMutation<ResourceTypesMutationContext>({
@@ -250,7 +251,7 @@ export default function ResourcesResourceTypesPage() {
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   const handleRefresh = React.useCallback(() => {
     setReloadToken((token) => token + 1)

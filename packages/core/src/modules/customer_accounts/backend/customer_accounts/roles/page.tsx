@@ -17,6 +17,7 @@ import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { useConfirmDialog } from '@open-mercato/ui/backend/confirm-dialog'
 import { useGuardedMutation } from '@open-mercato/ui/backend/injection/useGuardedMutation'
 import { ListEmptyState } from '@open-mercato/ui/backend/filters/ListEmptyState'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type RoleRow = {
   id: string
@@ -47,7 +48,7 @@ export default function CustomerRolesPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)
 

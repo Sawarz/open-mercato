@@ -40,6 +40,7 @@ jest.mock('@open-mercato/shared/lib/i18n/context', () => ({
 
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPush, replace: jest.fn() }),
+  useSearchParams: () => null,
 }))
 
 jest.mock('@open-mercato/ui/backend/BackendChromeProvider', () => ({

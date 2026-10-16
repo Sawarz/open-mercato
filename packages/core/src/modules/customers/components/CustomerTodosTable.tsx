@@ -16,6 +16,7 @@ import { Button } from '@open-mercato/ui/primitives/button'
 import { useOrganizationScopeVersion } from '@open-mercato/shared/lib/frontend/useOrganizationScope'
 import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { resolveTodoHref } from './detail/utils'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 type CustomerTodoItem = {
   id: string
@@ -94,7 +95,7 @@ export function CustomerTodosTable(): React.JSX.Element {
   const router = useRouter()
   const scopeVersion = useOrganizationScopeVersion()
 
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [page, setPage] = React.useState(1)
   const [pageSize] = React.useState(50)
 

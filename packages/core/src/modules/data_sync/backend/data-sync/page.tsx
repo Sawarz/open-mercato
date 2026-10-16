@@ -52,6 +52,7 @@ import { useDataSyncRunAccess } from '../../components/useDataSyncRunAccess'
 import { useConfirmDialog } from '@open-mercato/ui/backend/confirm-dialog'
 import type { RunParameter } from '../../lib/adapter'
 import { getApplicableRunParameters } from '../../lib/run-parameters'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 import {
   applicableStartControls,
   type StartControlApplicability,
@@ -202,7 +203,7 @@ export default function SyncRunsDashboardPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [isLoading, setIsLoading] = React.useState(true)
   const [isLoadingOptions, setIsLoadingOptions] = React.useState(true)

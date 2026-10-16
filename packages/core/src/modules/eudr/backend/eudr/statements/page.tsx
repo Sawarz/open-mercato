@@ -24,6 +24,7 @@ import { useLocale, useT } from '@open-mercato/shared/lib/i18n/context'
 import type { EudrActivityType, EudrCommodity, EudrRiskConclusion, EudrRiskTier, EudrStatementStatus } from '../../../data/validators'
 import { commodityOptions, statementStatusOptions, statusBadgeVariant, translateEudrErrorMessage } from '../../../components/formConfig'
 import { canDeleteStatement } from '../../../lib/statement-lifecycle'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 import {
   riskConclusionBadgeVariant,
   riskTierBadgeVariant,
@@ -81,7 +82,7 @@ export default function EudrStatementsPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [filters, setFilters] = React.useState<FilterValues>({})
   const [loading, setLoading] = React.useState(true)

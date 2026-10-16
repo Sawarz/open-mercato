@@ -17,6 +17,7 @@ import { ErrorMessage } from '@open-mercato/ui/backend/detail'
 import { apiCall } from '@open-mercato/ui/backend/utils/apiCall'
 import { usePortalContext } from '@open-mercato/ui/portal/PortalContext'
 import { PortalEmptyState } from '@open-mercato/ui/portal/components/PortalEmptyState'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 import {
   ClaimStatusBadge,
   CLAIM_STATUS_BADGE_VARIANTS,
@@ -68,7 +69,7 @@ export default function WarrantyClaimsPortalListPage({ params }: Props) {
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
   const [error, setError] = React.useState<string | null>(null)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
   const [stateGroup, setStateGroup] = React.useState<'all' | 'open' | 'resolved'>('all')
   const [tabCounts, setTabCounts] = React.useState<Partial<Record<'all' | 'open' | 'resolved', number>>>({})

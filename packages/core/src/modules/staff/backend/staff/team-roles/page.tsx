@@ -22,6 +22,7 @@ import { useT } from '@open-mercato/shared/lib/i18n/context'
 import { truncate } from 'fs'
 import { formatDateTime } from '@open-mercato/shared/lib/time'
 import { createLogger } from '@open-mercato/shared/lib/logger'
+import { useListSearchState } from '@open-mercato/ui/backend/utils/useListSearchState'
 
 const logger = createLogger('staff')
 
@@ -58,7 +59,7 @@ export default function StaffTeamRolesPage() {
   const [total, setTotal] = React.useState(0)
   const [totalPages, setTotalPages] = React.useState(1)
   const [totalIsCapped, setTotalIsCapped] = React.useState(false)
-  const [search, setSearch] = React.useState('')
+  const [search, setSearch] = useListSearchState()
   const [isLoading, setIsLoading] = React.useState(true)
   const [reloadToken, setReloadToken] = React.useState(0)
   const [filterValues, setFilterValues] = React.useState<FilterValues>({})
@@ -255,7 +256,7 @@ export default function StaffTeamRolesPage() {
   const handleSearchChange = React.useCallback((value: string) => {
     setSearch(value)
     setPage(1)
-  }, [])
+  }, [setSearch])
 
   const handleFiltersApply = React.useCallback((values: FilterValues) => {
     setFilterValues(values)
